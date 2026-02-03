@@ -50,6 +50,17 @@ function resolveRunner() {
   if (pnpm) {
     return { cmd: pnpm, kind: "pnpm" };
   }
+  // launchd (macOS) often runs with a minimal PATH, so look for pnpm next to the
+  // current Node binary (corepack installs a pnpm shim there).
+  try {
+    const nodeBin = path.dirname(process.execPath);
+    const candidate = path.join(nodeBin, process.platform === "win32" ? "pnpm.cmd" : "pnpm");
+    if (fs.existsSync(candidate)) {
+      return { cmd: candidate, kind: "pnpm" };
+    }
+  } catch {
+    // ignore
+  }
   return null;
 }
 

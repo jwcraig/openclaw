@@ -3,6 +3,7 @@ import { createRequire } from "node:module";
 declare const __OPENCLAW_VERSION__: string | undefined;
 const CORE_PACKAGE_NAME = "openclaw";
 
+// Keep both dist/index.js and dist/plugin-sdk/index.js resolution paths working.
 const PACKAGE_JSON_CANDIDATES = [
   "../package.json",
   "../../package.json",

@@ -569,7 +569,7 @@ export function createGatewayHttpServer(opts: {
           return;
         }
         if (
-          handleControlUiHttpRequest(req, res, {
+          await handleControlUiHttpRequest(req, res, {
             basePath: controlUiBasePath,
             config: configSnapshot,
             root: controlUiRoot,
