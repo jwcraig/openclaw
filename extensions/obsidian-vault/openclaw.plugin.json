@@ -1,0 +1,48 @@
+{
+  "id": "obsidian-vault",
+  "name": "Obsidian Vault",
+  "description": "Read/write/search notes within a configured Obsidian vault directory.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "vaultRoot": {
+        "type": "string",
+        "description": "Absolute path to the Obsidian vault root directory."
+      },
+      "allowWrite": {
+        "type": "boolean",
+        "default": true,
+        "description": "Whether write operations are allowed."
+      },
+      "denyDotObsidian": {
+        "type": "boolean",
+        "default": true,
+        "description": "When true, disallow reading/writing/searching in the .obsidian/ settings folder."
+      },
+      "maxReadBytes": {
+        "type": "number",
+        "default": 1000000,
+        "description": "Maximum bytes to read from a single note."
+      },
+      "maxWriteBytes": {
+        "type": "number",
+        "default": 2000000,
+        "description": "Maximum bytes allowed in a single write."
+      },
+      "maxSearchBytesPerFile": {
+        "type": "number",
+        "default": 250000,
+        "description": "Maximum bytes scanned per file during search."
+      }
+    },
+    "required": [
+      "vaultRoot"
+    ]
+  }
+}
+

@@ -1,0 +1,17 @@
+{
+  "name": "@openclaw/obsidian-vault",
+  "version": "2026.2.1",
+  "description": "Obsidian vault read/write/search tools (local filesystem)",
+  "type": "module",
+  "devDependencies": {
+    "openclaw": "workspace:*"
+  },
+  "peerDependencies": {
+    "openclaw": ">=2026.1.26"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

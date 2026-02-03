@@ -1,0 +1,39 @@
+{
+  "id": "gmail-readonly",
+  "name": "Gmail (Read-only)",
+  "description": "Read-only Gmail + Google Calendar tools. Includes an OAuth login CLI (`openclaw gmail login`).",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "clientId": {
+        "type": "string",
+        "description": "Google OAuth Client ID (Desktop app)."
+      },
+      "clientSecret": {
+        "type": "string",
+        "description": "Google OAuth Client Secret (Desktop app). Stored locally in ~/.openclaw/openclaw.json."
+      },
+      "redirectUri": {
+        "type": "string",
+        "description": "OAuth redirect URI (must be loopback). Example: http://127.0.0.1:42813/oauth2/callback",
+        "default": "http://127.0.0.1:42813/oauth2/callback"
+      },
+      "allowEmails": {
+        "type": "array",
+        "description": "Optional allowlist of Gmail addresses that can be used by this integration.",
+        "items": { "type": "string" }
+      },
+      "allowCalendarWrite": {
+        "type": "boolean",
+        "default": false,
+        "description": "When enabled, allows creating calendar events (email stays read-only). Requires re-login for new OAuth scopes."
+      }
+    },
+    "required": []
+  }
+}

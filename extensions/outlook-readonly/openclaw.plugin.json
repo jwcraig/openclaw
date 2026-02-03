@@ -1,0 +1,35 @@
+{
+  "id": "outlook-readonly",
+  "name": "Outlook (Read-only)",
+  "description": "Read-only Outlook Mail + Calendar tools via Microsoft Graph. Includes a login CLI (`openclaw outlook login`).",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "clientId": {
+        "type": "string",
+        "description": "Microsoft Entra app clientId (public client)."
+      },
+      "tenant": {
+        "type": "string",
+        "default": "common",
+        "description": "Tenant for auth (common|organizations|consumers or a tenant id)."
+      },
+      "allowUpns": {
+        "type": "array",
+        "description": "Optional allowlist of userPrincipalName (email) values that can be used.",
+        "items": { "type": "string" }
+      },
+      "allowCalendarWrite": {
+        "type": "boolean",
+        "default": false,
+        "description": "When enabled, allows creating calendar events (email stays read-only). Requires re-login for new OAuth scopes."
+      }
+    },
+    "required": []
+  }
+}

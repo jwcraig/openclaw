@@ -1,0 +1,24 @@
+{
+  "name": "@openclaw/gmail-readonly",
+  "version": "2026.2.1",
+  "description": "OpenClaw Gmail + Google Calendar read-only integration (OAuth)",
+  "type": "module",
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.40",
+    "openclaw": "workspace:*"
+  },
+  "devDependencies": {
+    "openclaw": "workspace:*"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "install": {
+      "npmSpec": "@openclaw/gmail-readonly",
+      "localPath": "extensions/gmail-readonly",
+      "defaultChoice": "npm"
+    }
+  }
+}
+

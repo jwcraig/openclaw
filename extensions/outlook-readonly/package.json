@@ -1,0 +1,24 @@
+{
+  "name": "@openclaw/outlook-readonly",
+  "version": "2026.2.1",
+  "description": "OpenClaw Outlook (Microsoft 365) mail + calendar read-only integration (Microsoft Graph OAuth device code)",
+  "type": "module",
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.40",
+    "openclaw": "workspace:*"
+  },
+  "devDependencies": {
+    "openclaw": "workspace:*"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ],
+    "install": {
+      "npmSpec": "@openclaw/outlook-readonly",
+      "localPath": "extensions/outlook-readonly",
+      "defaultChoice": "npm"
+    }
+  }
+}
+
