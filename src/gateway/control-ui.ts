@@ -2,7 +2,11 @@ import fs from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import path from "node:path";
 import type { OpenClawConfig } from "../config/config.js";
-import { resolveControlUiRootSync } from "../infra/control-ui-assets.js";
+import {
+  ensureControlUiAssetsBuilt,
+  resolveControlUiRootSync,
+  type EnsureControlUiAssetsResult,
+} from "../infra/control-ui-assets.js";
 import { isWithinDir } from "../infra/path-safety.js";
 import { openVerifiedFileSync } from "../infra/safe-open-sync.js";
 import { AVATAR_MAX_BYTES } from "../shared/avatar-policy.js";
@@ -20,6 +24,18 @@ import {
 } from "./control-ui-shared.js";
 
 const ROOT_PREFIX = "/";
+
+let controlUiBuildInFlight: Promise<EnsureControlUiAssetsResult> | null = null;
+
+function triggerControlUiBuildOnce() {
+  if (controlUiBuildInFlight) {
+    return;
+  }
+  controlUiBuildInFlight = ensureControlUiAssetsBuilt();
+  void controlUiBuildInFlight.finally(() => {
+    controlUiBuildInFlight = null;
+  });
+}
 
 export type ControlUiRequestOptions = {
   basePath?: string;
@@ -365,19 +381,22 @@ export function handleControlUiHttpRequest(
     return true;
   }
 
+  const controlUiResolveOpts = {
+    moduleUrl: import.meta.url,
+    argv1: process.argv[1],
+    cwd: process.cwd(),
+  };
   const root =
     rootState?.kind === "resolved"
       ? rootState.path
-      : resolveControlUiRootSync({
-          moduleUrl: import.meta.url,
-          argv1: process.argv[1],
-          cwd: process.cwd(),
-        });
+      : resolveControlUiRootSync(controlUiResolveOpts);
   if (!root) {
+    triggerControlUiBuildOnce();
     res.statusCode = 503;
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.end(
-      "Control UI assets not found. Build them with `pnpm ui:build` (auto-installs UI deps), or run `pnpm ui:dev` during development.",
+      "Control UI assets not found. Building them now; retry in a moment. " +
+        "If this persists, run `pnpm ui:build` (auto-installs UI deps), or `pnpm ui:dev` during development.",
     );
     return true;
   }
