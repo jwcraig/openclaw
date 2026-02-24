@@ -7,7 +7,8 @@ import { gmailReadonlyConfigSchema } from "./src/gmail-readonly.config.js";
 const plugin = {
   id: "gmail-readonly",
   name: "Gmail (Read-only)",
-  description: "Read-only Gmail + Google Calendar integration (OAuth). Calendar writes are optional and gated by config.",
+  description:
+    "Read-only Gmail + Google Calendar integration (OAuth). Calendar writes are optional and gated by config.",
   configSchema: gmailReadonlyConfigSchema,
   register(api: OpenClawPluginApi) {
     const config = gmailReadonlyConfigSchema.parse(api.pluginConfig);

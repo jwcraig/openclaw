@@ -51,7 +51,10 @@ export async function listStoredGoogleAccounts(api: OpenClawPluginApi): Promise<
   }
 }
 
-export async function readGoogleOAuth(api: OpenClawPluginApi, email: string): Promise<GoogleStoredOAuth> {
+export async function readGoogleOAuth(
+  api: OpenClawPluginApi,
+  email: string,
+): Promise<GoogleStoredOAuth> {
   const filePath = resolveGmailReadonlyTokenPath(api, email);
   const raw = await fs.readFile(filePath, "utf8");
   const parsed = JSON.parse(raw) as Partial<GoogleStoredOAuth>;
@@ -87,4 +90,3 @@ export async function writeGoogleOAuth(api: OpenClawPluginApi, oauth: GoogleStor
   }
   await fs.rename(tmpPath, filePath);
 }
-

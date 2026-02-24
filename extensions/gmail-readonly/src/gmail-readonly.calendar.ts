@@ -52,24 +52,23 @@ async function calFetchJson<T>(
   return JSON.parse(text) as T;
 }
 
-export async function listCalendarEvents(accessToken: string, params: {
-  calendarId?: string;
-  timeMin: string;
-  timeMax: string;
-  maxResults: number;
-}) {
+export async function listCalendarEvents(
+  accessToken: string,
+  params: {
+    calendarId?: string;
+    timeMin: string;
+    timeMax: string;
+    maxResults: number;
+  },
+) {
   const calendarId = params.calendarId?.trim() || "primary";
-  const data = await calFetch(
-    accessToken,
-    `/calendars/${encodeURIComponent(calendarId)}/events`,
-    {
-      timeMin: params.timeMin,
-      timeMax: params.timeMax,
-      maxResults: String(params.maxResults),
-      singleEvents: "true",
-      orderBy: "startTime",
-    },
-  );
+  const data = await calFetch(accessToken, `/calendars/${encodeURIComponent(calendarId)}/events`, {
+    timeMin: params.timeMin,
+    timeMax: params.timeMax,
+    maxResults: String(params.maxResults),
+    singleEvents: "true",
+    orderBy: "startTime",
+  });
   const items = Array.isArray(data.items) ? (data.items as any[]) : [];
   return items.map((e) => ({
     id: String(e.id || ""),

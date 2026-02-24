@@ -6,7 +6,12 @@ export type GraphMe = {
   userPrincipalName?: string;
 };
 
-async function graphFetch(accessToken: string, path: string, query?: Record<string, string>, headers?: Record<string, string>) {
+async function graphFetch(
+  accessToken: string,
+  path: string,
+  query?: Record<string, string>,
+  headers?: Record<string, string>,
+) {
   const url = new URL(`${GRAPH_ROOT}${path}`);
   for (const [k, v] of Object.entries(query ?? {})) {
     if (v) url.searchParams.set(k, v);
@@ -52,7 +57,9 @@ async function graphFetchJson<T>(
 }
 
 export async function fetchGraphMe(accessToken: string): Promise<GraphMe> {
-  const data = await graphFetch(accessToken, "/me", { "$select": "id,displayName,userPrincipalName" });
+  const data = await graphFetch(accessToken, "/me", {
+    $select: "id,displayName,userPrincipalName",
+  });
   const upn = String(data.userPrincipalName || "");
   if (!upn) {
     throw new Error("Graph /me missing userPrincipalName");
@@ -60,25 +67,36 @@ export async function fetchGraphMe(accessToken: string): Promise<GraphMe> {
   return data as GraphMe;
 }
 
-export async function listOutlookMessages(accessToken: string, params: { top: number; folder?: string }) {
+export async function listOutlookMessages(
+  accessToken: string,
+  params: { top: number; folder?: string },
+) {
   const folder = params.folder?.trim() || "Inbox";
-  const data = await graphFetch(accessToken, `/me/mailFolders/${encodeURIComponent(folder)}/messages`, {
-    "$top": String(params.top),
-    "$select":
-      "id,receivedDateTime,subject,from,toRecipients,ccRecipients,hasAttachments,bodyPreview,isRead,conversationId",
-    "$orderby": "receivedDateTime desc",
-  });
+  const data = await graphFetch(
+    accessToken,
+    `/me/mailFolders/${encodeURIComponent(folder)}/messages`,
+    {
+      $top: String(params.top),
+      $select:
+        "id,receivedDateTime,subject,from,toRecipients,ccRecipients,hasAttachments,bodyPreview,isRead,conversationId",
+      $orderby: "receivedDateTime desc",
+    },
+  );
   const items = Array.isArray(data.value) ? (data.value as any[]) : [];
   return items;
 }
 
-export async function getOutlookMessage(accessToken: string, id: string, opts?: { bodyType?: "text" | "html" }) {
+export async function getOutlookMessage(
+  accessToken: string,
+  id: string,
+  opts?: { bodyType?: "text" | "html" },
+) {
   const bodyType = opts?.bodyType ?? "text";
   const data = await graphFetch(
     accessToken,
     `/me/messages/${encodeURIComponent(id)}`,
     {
-      "$select":
+      $select:
         "id,receivedDateTime,subject,from,toRecipients,ccRecipients,hasAttachments,bodyPreview,isRead,conversationId,body",
     },
     { Prefer: `outlook.body-content-type="${bodyType}"` },
@@ -86,13 +104,16 @@ export async function getOutlookMessage(accessToken: string, id: string, opts?: 
   return data;
 }
 
-export async function listOutlookCalendarView(accessToken: string, params: { startDateTime: string; endDateTime: string; top: number }) {
+export async function listOutlookCalendarView(
+  accessToken: string,
+  params: { startDateTime: string; endDateTime: string; top: number },
+) {
   const data = await graphFetch(accessToken, "/me/calendarView", {
     startDateTime: params.startDateTime,
     endDateTime: params.endDateTime,
-    "$top": String(params.top),
-    "$select": "id,subject,bodyPreview,organizer,start,end,location,isAllDay,webLink",
-    "$orderby": "start/dateTime",
+    $top: String(params.top),
+    $select: "id,subject,bodyPreview,organizer,start,end,location,isAllDay,webLink",
+    $orderby: "start/dateTime",
   });
   const items = Array.isArray(data.value) ? (data.value as any[]) : [];
   return items;
@@ -110,9 +131,7 @@ export async function createOutlookEvent(
 ) {
   const payload = {
     subject: params.subject,
-    ...(params.body
-      ? { body: { contentType: "text", content: params.body } }
-      : {}),
+    ...(params.body ? { body: { contentType: "text", content: params.body } } : {}),
     start: { dateTime: params.start.dateTime, timeZone: params.start.timeZone },
     end: { dateTime: params.end.dateTime, timeZone: params.end.timeZone },
     ...(params.location ? { location: { displayName: params.location } } : {}),

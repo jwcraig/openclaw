@@ -1,8 +1,8 @@
 import type { Command } from "commander";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
-import { outlookReadonlyConfigSchema } from "./src/outlook-readonly.config.js";
-import { registerOutlookReadonlyCli } from "./src/outlook-readonly.cli.js";
 import { createOutlookReadonlyTool } from "./src/outlook-readonly-tool.js";
+import { registerOutlookReadonlyCli } from "./src/outlook-readonly.cli.js";
+import { outlookReadonlyConfigSchema } from "./src/outlook-readonly.config.js";
 
 const plugin = {
   id: "outlook-readonly",

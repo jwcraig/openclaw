@@ -38,7 +38,9 @@ export function registerOutlookReadonlyCli(params: {
     .action(async () => {
       const accounts = await listStoredMicrosoftAccounts(api);
       if (accounts.length === 0) {
-        api.logger.info("[outlook-readonly] No accounts configured yet. Run: openclaw outlook login");
+        api.logger.info(
+          "[outlook-readonly] No accounts configured yet. Run: openclaw outlook login",
+        );
         return;
       }
       api.logger.info(`[outlook-readonly] Accounts: ${accounts.join(", ")}`);

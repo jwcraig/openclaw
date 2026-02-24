@@ -52,7 +52,10 @@ export async function listStoredMicrosoftAccounts(api: OpenClawPluginApi): Promi
   }
 }
 
-export async function readMicrosoftOAuth(api: OpenClawPluginApi, upn: string): Promise<MicrosoftStoredOAuth> {
+export async function readMicrosoftOAuth(
+  api: OpenClawPluginApi,
+  upn: string,
+): Promise<MicrosoftStoredOAuth> {
   const filePath = resolveOutlookReadonlyTokenPath(api, upn);
   const raw = await fs.readFile(filePath, "utf8");
   const parsed = JSON.parse(raw) as Partial<MicrosoftStoredOAuth>;
@@ -91,4 +94,3 @@ export async function writeMicrosoftOAuth(api: OpenClawPluginApi, oauth: Microso
   }
   await fs.rename(tmpPath, filePath);
 }
-

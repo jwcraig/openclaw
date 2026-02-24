@@ -68,10 +68,13 @@ export async function fetchGmailProfile(accessToken: string): Promise<GmailProfi
   return data as GmailProfile;
 }
 
-export async function listGmailMessages(accessToken: string, params: {
-  q?: string;
-  maxResults: number;
-}) {
+export async function listGmailMessages(
+  accessToken: string,
+  params: {
+    q?: string;
+    maxResults: number;
+  },
+) {
   const data = await gmailFetch(accessToken, "/users/me/messages", {
     q: params.q || "",
     maxResults: String(params.maxResults),
@@ -82,7 +85,11 @@ export async function listGmailMessages(accessToken: string, params: {
     .filter((m) => m.id);
 }
 
-export async function getGmailMessage(accessToken: string, id: string, opts?: { format?: "metadata" | "full" }) {
+export async function getGmailMessage(
+  accessToken: string,
+  id: string,
+  opts?: { format?: "metadata" | "full" },
+) {
   const format = opts?.format ?? "metadata";
   const data = await gmailFetch(accessToken, `/users/me/messages/${encodeURIComponent(id)}`, {
     format,

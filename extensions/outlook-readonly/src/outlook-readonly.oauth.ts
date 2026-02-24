@@ -1,7 +1,7 @@
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import type { OutlookReadonlyPluginConfig } from "./outlook-readonly.config.js";
-import { fetchGraphMe } from "./outlook-readonly.graph.js";
 import { writeMicrosoftOAuth, type MicrosoftStoredOAuth } from "./outlook-readonly.credentials.js";
+import { fetchGraphMe } from "./outlook-readonly.graph.js";
 
 function encodeForm(params: Record<string, string>) {
   const body = new URLSearchParams();
@@ -24,7 +24,10 @@ const DEFAULT_SCOPES = [
   "User.Read",
 ];
 
-export async function runMicrosoftDeviceCodeLogin(api: OpenClawPluginApi, cfg: OutlookReadonlyPluginConfig) {
+export async function runMicrosoftDeviceCodeLogin(
+  api: OpenClawPluginApi,
+  cfg: OutlookReadonlyPluginConfig,
+) {
   const scope = DEFAULT_SCOPES.join(" ");
   const base = authBase(cfg.tenant);
   const deviceCodeUrl = `${base}/devicecode`;

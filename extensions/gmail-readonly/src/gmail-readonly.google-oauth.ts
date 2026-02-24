@@ -142,14 +142,17 @@ export async function runGoogleOAuthLogin(api: OpenClawPluginApi, cfg: GmailRead
     server.listen(port, "127.0.0.1");
 
     // Hard timeout to avoid hanging forever.
-    setTimeout(() => {
-      try {
-        server.close(() => undefined);
-      } catch {
-        // ignore
-      }
-      reject(new Error("OAuth timed out (no callback received)"));
-    }, 10 * 60 * 1000).unref();
+    setTimeout(
+      () => {
+        try {
+          server.close(() => undefined);
+        } catch {
+          // ignore
+        }
+        reject(new Error("OAuth timed out (no callback received)"));
+      },
+      10 * 60 * 1000,
+    ).unref();
   });
 
   api.logger.info(`[gmail-readonly] Got OAuth code (${redact(code)}). Exchanging for tokens…`);

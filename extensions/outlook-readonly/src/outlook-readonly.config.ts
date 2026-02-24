@@ -28,7 +28,8 @@ export function parseOutlookReadonlyConfig(value: unknown): OutlookReadonlyPlugi
   const enabled = parseBoolean(raw.enabled, true);
   const clientId =
     parseString(raw.clientId) || parseString(process.env.OPENCLAW_OUTLOOK_CLIENT_ID) || "";
-  const tenant = parseString(raw.tenant) || parseString(process.env.OPENCLAW_OUTLOOK_TENANT) || "common";
+  const tenant =
+    parseString(raw.tenant) || parseString(process.env.OPENCLAW_OUTLOOK_TENANT) || "common";
 
   return {
     enabled,
