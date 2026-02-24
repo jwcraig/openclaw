@@ -322,6 +322,15 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  extensions/gmail-readonly:
+    dependencies:
+      '@sinclair/typebox':
+        specifier: 0.34.48
+        version: 0.34.48
+      openclaw:
+        specifier: workspace:*
+        version: link:../..
+
   extensions/google-gemini-cli-auth:
     devDependencies:
       openclaw:
@@ -448,7 +457,22 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  extensions/obsidian-vault:
+    devDependencies:
+      openclaw:
+        specifier: workspace:*
+        version: link:../..
+
   extensions/open-prose: {}
+
+  extensions/outlook-readonly:
+    dependencies:
+      '@sinclair/typebox':
+        specifier: 0.34.48
+        version: 0.34.48
+      openclaw:
+        specifier: workspace:*
+        version: link:../..
 
   extensions/signal:
     devDependencies:

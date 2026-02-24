@@ -17,10 +17,6 @@ export default defineConfig([
     fixedExtension: false,
     platform: "node",
   },
-  // IMPORTANT: plugin-sdk is published as `openclaw/plugin-sdk` and is used by
-  // workspace plugins (extensions/*). Its entry file is also named `index.ts`,
-  // which would otherwise collide with `src/index.ts` and prevent generating the
-  // expected `dist/plugin-sdk/index.js` output.
   {
     // Ensure this module is bundled as an entry so legacy CLI shims can resolve its exports.
     entry: "src/cli/daemon-cli.ts",
@@ -36,9 +32,9 @@ export default defineConfig([
   },
   {
     entry: "src/plugin-sdk/index.ts",
+    outDir: "dist/plugin-sdk",
     env,
     fixedExtension: false,
-    outDir: "dist/plugin-sdk",
     platform: "node",
   },
   {
