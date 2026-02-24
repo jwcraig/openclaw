@@ -7,7 +7,12 @@ import {
   readMicrosoftOAuth,
   writeMicrosoftOAuth,
 } from "./outlook-readonly.credentials.js";
-import { createOutlookEvent, getOutlookMessage, listOutlookCalendarView, listOutlookMessages } from "./outlook-readonly.graph.js";
+import {
+  createOutlookEvent,
+  getOutlookMessage,
+  listOutlookCalendarView,
+  listOutlookMessages,
+} from "./outlook-readonly.graph.js";
 import { refreshMicrosoftAccessToken } from "./outlook-readonly.oauth.js";
 
 type ToolAction =
@@ -60,7 +65,9 @@ export const OutlookReadonlyToolSchema = Type.Object(
     folder: Type.Optional(Type.String({ description: 'Mail folder name (default "Inbox")' })),
     maxResults: Type.Optional(Type.Number({ description: "Max results (default 10, max 50)" })),
     id: Type.Optional(Type.String({ description: "Message id" })),
-    bodyType: Type.Optional(stringEnum(["text", "html"], { description: "Body type for message get" })),
+    bodyType: Type.Optional(
+      stringEnum(["text", "html"], { description: "Body type for message get" }),
+    ),
     startDateTime: Type.Optional(Type.String({ description: "RFC3339 start (inclusive)" })),
     endDateTime: Type.Optional(Type.String({ description: "RFC3339 end (exclusive)" })),
     subject: Type.Optional(Type.String({ description: "Event subject/title" })),
@@ -75,6 +82,13 @@ export const OutlookReadonlyToolSchema = Type.Object(
   },
   { additionalProperties: false },
 );
+
+function textResult(text: string, details: unknown) {
+  return {
+    content: [{ type: "text" as const, text }],
+    details,
+  };
+}
 
 function clampMaxResults(value: number | undefined, fallback: number) {
   if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
@@ -94,7 +108,11 @@ async function pickAccount(api: OpenClawPluginApi, requested: string | undefined
   );
 }
 
-async function getValidAccessToken(api: OpenClawPluginApi, cfg: OutlookReadonlyPluginConfig, upn: string) {
+async function getValidAccessToken(
+  api: OpenClawPluginApi,
+  cfg: OutlookReadonlyPluginConfig,
+  upn: string,
+) {
   const oauth = await readMicrosoftOAuth(api, upn);
   const now = Date.now();
   if (oauth.expiresAtMs > now + 10_000) {
@@ -117,7 +135,10 @@ async function getValidAccessToken(api: OpenClawPluginApi, cfg: OutlookReadonlyP
   return next.accessToken;
 }
 
-export function createOutlookReadonlyTool(api: OpenClawPluginApi, cfg: OutlookReadonlyPluginConfig) {
+export function createOutlookReadonlyTool(
+  api: OpenClawPluginApi,
+  cfg: OutlookReadonlyPluginConfig,
+) {
   function ensureConfigured() {
     if (!cfg.clientId) {
       throw new Error(
@@ -146,10 +167,11 @@ export function createOutlookReadonlyTool(api: OpenClawPluginApi, cfg: OutlookRe
     async execute(_id: string, params: ToolAction) {
       if (params.action === "list_accounts") {
         const accounts = await listStoredMicrosoftAccounts(api);
-        return {
-          content: [{ type: "text", text: JSON.stringify({ accounts }, null, 2) }],
-          details: { ok: true, action: params.action, accounts },
-        };
+        return textResult(JSON.stringify({ accounts }, null, 2), {
+          ok: true,
+          action: params.action,
+          accounts,
+        });
       }
 
       ensureConfigured();
@@ -164,20 +186,24 @@ export function createOutlookReadonlyTool(api: OpenClawPluginApi, cfg: OutlookRe
       if (params.action === "mail_list_messages") {
         const top = clampMaxResults(params.maxResults, 10);
         const items = await listOutlookMessages(accessToken, { top, folder: params.folder });
-        return {
-          content: [{ type: "text", text: JSON.stringify(items, null, 2) }],
-          details: { ok: true, action: params.action, account, count: items.length },
-        };
+        return textResult(JSON.stringify(items, null, 2), {
+          ok: true,
+          action: params.action,
+          account,
+          count: items.length,
+        });
       }
 
       if (params.action === "mail_get_message") {
         const id = (params.id || "").trim();
         if (!id) throw new Error("id is required");
         const msg = await getOutlookMessage(accessToken, id, { bodyType: params.bodyType });
-        return {
-          content: [{ type: "text", text: JSON.stringify(msg, null, 2) }],
-          details: { ok: true, action: params.action, account, id },
-        };
+        return textResult(JSON.stringify(msg, null, 2), {
+          ok: true,
+          action: params.action,
+          account,
+          id,
+        });
       }
 
       if (params.action === "calendar_list_events") {
@@ -186,11 +212,17 @@ export function createOutlookReadonlyTool(api: OpenClawPluginApi, cfg: OutlookRe
         if (!startDateTime) throw new Error("startDateTime is required");
         if (!endDateTime) throw new Error("endDateTime is required");
         const top = clampMaxResults(params.maxResults, 20);
-        const items = await listOutlookCalendarView(accessToken, { startDateTime, endDateTime, top });
-        return {
-          content: [{ type: "text", text: JSON.stringify(items, null, 2) }],
-          details: { ok: true, action: params.action, account, count: items.length },
-        };
+        const items = await listOutlookCalendarView(accessToken, {
+          startDateTime,
+          endDateTime,
+          top,
+        });
+        return textResult(JSON.stringify(items, null, 2), {
+          ok: true,
+          action: params.action,
+          account,
+          count: items.length,
+        });
       }
 
       if (params.action === "calendar_create_event") {
@@ -214,10 +246,12 @@ export function createOutlookReadonlyTool(api: OpenClawPluginApi, cfg: OutlookRe
           start: { dateTime: startDateTime, timeZone: tz },
           end: { dateTime: endDateTime, timeZone: tz },
         });
-        return {
-          content: [{ type: "text", text: JSON.stringify(created, null, 2) }],
-          details: { ok: true, action: params.action, account, id: String(created.id || "") },
-        };
+        return textResult(JSON.stringify(created, null, 2), {
+          ok: true,
+          action: params.action,
+          account,
+          id: String(created.id || ""),
+        });
       }
 
       throw new Error(`Unknown action: ${(params as any).action}`);

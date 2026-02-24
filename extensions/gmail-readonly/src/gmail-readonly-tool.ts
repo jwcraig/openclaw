@@ -1,17 +1,14 @@
 import { Type } from "@sinclair/typebox";
 import type { OpenClawPluginApi } from "openclaw/plugin-sdk";
 import { stringEnum } from "openclaw/plugin-sdk";
-import type { GmailReadonlyPluginConfig } from "./gmail-readonly.config.js";
 import { createCalendarEvent, listCalendarEvents } from "./gmail-readonly.calendar.js";
-import {
-  getGmailMessage,
-  listGmailMessages,
-} from "./gmail-readonly.gmail.js";
+import type { GmailReadonlyPluginConfig } from "./gmail-readonly.config.js";
 import {
   listStoredGoogleAccounts,
   readGoogleOAuth,
   writeGoogleOAuth,
 } from "./gmail-readonly.credentials.js";
+import { getGmailMessage, listGmailMessages } from "./gmail-readonly.gmail.js";
 import { refreshGoogleAccessToken } from "./gmail-readonly.google-oauth.js";
 
 type ToolAction =
@@ -60,7 +57,9 @@ export const GmailReadonlyToolSchema = Type.Object(
       "calendar_create_event",
     ]),
     account: Type.Optional(
-      Type.String({ description: "Gmail account email address (optional if only one is configured)" }),
+      Type.String({
+        description: "Gmail account email address (optional if only one is configured)",
+      }),
     ),
     query: Type.Optional(Type.String({ description: "Gmail search query (q=...)" })),
     maxResults: Type.Optional(Type.Number({ description: "Max results (default 10, max 50)" })),
@@ -79,9 +78,13 @@ export const GmailReadonlyToolSchema = Type.Object(
       Type.String({ description: "RFC3339 end (exclusive), e.g. 2026-02-10T00:00:00Z" }),
     ),
     summary: Type.Optional(Type.String({ description: "Calendar event summary/title" })),
-    description: Type.Optional(Type.String({ description: "Calendar event description (optional)" })),
+    description: Type.Optional(
+      Type.String({ description: "Calendar event description (optional)" }),
+    ),
     location: Type.Optional(Type.String({ description: "Calendar event location (optional)" })),
-    startDateTime: Type.Optional(Type.String({ description: "RFC3339 start dateTime (inclusive)" })),
+    startDateTime: Type.Optional(
+      Type.String({ description: "RFC3339 start dateTime (inclusive)" }),
+    ),
     endDateTime: Type.Optional(Type.String({ description: "RFC3339 end dateTime (exclusive)" })),
     timeZone: Type.Optional(
       Type.String({
@@ -92,6 +95,13 @@ export const GmailReadonlyToolSchema = Type.Object(
   },
   { additionalProperties: false },
 );
+
+function textResult(text: string, details: unknown) {
+  return {
+    content: [{ type: "text" as const, text }],
+    details,
+  };
+}
 
 function clampMaxResults(value: number | undefined, fallback: number) {
   if (typeof value !== "number" || !Number.isFinite(value)) return fallback;
@@ -111,7 +121,11 @@ async function pickAccount(api: OpenClawPluginApi, requested: string | undefined
   );
 }
 
-async function getValidAccessToken(api: OpenClawPluginApi, cfg: GmailReadonlyPluginConfig, accountEmail: string) {
+async function getValidAccessToken(
+  api: OpenClawPluginApi,
+  cfg: GmailReadonlyPluginConfig,
+  accountEmail: string,
+) {
   const oauth = await readGoogleOAuth(api, accountEmail);
   const now = Date.now();
   if (oauth.expiresAtMs > now + 10_000) {
@@ -153,10 +167,11 @@ export function createGmailReadonlyTool(api: OpenClawPluginApi, cfg: GmailReadon
     async execute(_id: string, params: ToolAction) {
       if (params.action === "list_accounts") {
         const accounts = await listStoredGoogleAccounts(api);
-        return {
-          content: [{ type: "text", text: JSON.stringify({ accounts }, null, 2) }],
-          details: { ok: true, action: params.action, accounts },
-        };
+        return textResult(JSON.stringify({ accounts }, null, 2), {
+          ok: true,
+          action: params.action,
+          accounts,
+        });
       }
 
       ensureConfigured();
@@ -172,30 +187,37 @@ export function createGmailReadonlyTool(api: OpenClawPluginApi, cfg: GmailReadon
         const id = (params.id || "").trim();
         if (!id) throw new Error("id is required");
         const msg = await getGmailMessage(accessToken, id, { format: "metadata" });
-        return {
-          content: [{ type: "text", text: JSON.stringify(msg, null, 2) }],
-          details: { ok: true, action: params.action, account, id },
-        };
+        return textResult(JSON.stringify(msg, null, 2), {
+          ok: true,
+          action: params.action,
+          account,
+          id,
+        });
       }
 
       if (params.action === "gmail_list_messages") {
         const maxResults = clampMaxResults(params.maxResults, 10);
-        const includeDetails = typeof params.includeDetails === "boolean" ? params.includeDetails : true;
+        const includeDetails =
+          typeof params.includeDetails === "boolean" ? params.includeDetails : true;
         const list = await listGmailMessages(accessToken, { q: params.query, maxResults });
         if (!includeDetails) {
-          return {
-            content: [{ type: "text", text: JSON.stringify(list, null, 2) }],
-            details: { ok: true, action: params.action, account, count: list.length },
-          };
+          return textResult(JSON.stringify(list, null, 2), {
+            ok: true,
+            action: params.action,
+            account,
+            count: list.length,
+          });
         }
         const detailed = [];
         for (const m of list) {
           detailed.push(await getGmailMessage(accessToken, m.id, { format: "metadata" }));
         }
-        return {
-          content: [{ type: "text", text: JSON.stringify(detailed, null, 2) }],
-          details: { ok: true, action: params.action, account, count: detailed.length },
-        };
+        return textResult(JSON.stringify(detailed, null, 2), {
+          ok: true,
+          action: params.action,
+          account,
+          count: detailed.length,
+        });
       }
 
       if (params.action === "calendar_list_events") {
@@ -210,10 +232,12 @@ export function createGmailReadonlyTool(api: OpenClawPluginApi, cfg: GmailReadon
           timeMax,
           maxResults,
         });
-        return {
-          content: [{ type: "text", text: JSON.stringify(events, null, 2) }],
-          details: { ok: true, action: params.action, account, count: events.length },
-        };
+        return textResult(JSON.stringify(events, null, 2), {
+          ok: true,
+          action: params.action,
+          account,
+          count: events.length,
+        });
       }
 
       if (params.action === "calendar_create_event") {
@@ -236,10 +260,12 @@ export function createGmailReadonlyTool(api: OpenClawPluginApi, cfg: GmailReadon
           start: { dateTime: startDateTime, timeZone: params.timeZone },
           end: { dateTime: endDateTime, timeZone: params.timeZone },
         });
-        return {
-          content: [{ type: "text", text: JSON.stringify(created, null, 2) }],
-          details: { ok: true, action: params.action, account, id: created.id },
-        };
+        return textResult(JSON.stringify(created, null, 2), {
+          ok: true,
+          action: params.action,
+          account,
+          id: created.id,
+        });
       }
 
       throw new Error(`Unknown action: ${(params as any).action}`);

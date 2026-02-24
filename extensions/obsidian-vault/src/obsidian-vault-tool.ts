@@ -69,6 +69,13 @@ export const ObsidianVaultToolSchema = Type.Object(
   { additionalProperties: false },
 );
 
+function textResult(text: string, details: unknown) {
+  return {
+    content: [{ type: "text" as const, text }],
+    details,
+  };
+}
+
 function normalizeRelativeVaultPath(input: string) {
   const trimmed = input.trim();
   if (!trimmed) {
@@ -225,13 +232,11 @@ async function upsertSection(
   } catch (err) {
     // File doesn't exist yet → treat as empty and create.
     existing = "";
-    if (
-      err &&
-      typeof err === "object" &&
-      "code" in err &&
-      // @ts-expect-error node error shape
-      (err.code === "ENOENT" || err.code === "ENOTDIR")
-    ) {
+    const code =
+      err && typeof err === "object" && "code" in err
+        ? (err as NodeJS.ErrnoException).code
+        : undefined;
+    if (code === "ENOENT" || code === "ENOTDIR") {
       // ok
     }
   }
@@ -312,11 +317,14 @@ function shouldSkipSearchDir(name: string) {
   return false;
 }
 
-export async function searchVault(cfg: ObsidianVaultPluginConfig, params: {
-  query: string;
-  maxResults: number;
-  caseSensitive: boolean;
-}) {
+export async function searchVault(
+  cfg: ObsidianVaultPluginConfig,
+  params: {
+    query: string;
+    maxResults: number;
+    caseSensitive: boolean;
+  },
+) {
   const query = params.query.trim();
   if (!query) {
     throw new Error("query is required");
@@ -413,10 +421,7 @@ export function createObsidianVaultTool(api: OpenClawPluginApi, cfg: ObsidianVau
           throw new Error("path is required");
         }
         const text = await readNote(cfg, params.path);
-        return {
-          content: [{ type: "text", text }],
-          details: { ok: true, action, path: params.path },
-        };
+        return textResult(text, { ok: true, action, path: params.path });
       }
 
       if (action === "write_note") {
@@ -428,10 +433,12 @@ export function createObsidianVaultTool(api: OpenClawPluginApi, cfg: ObsidianVau
         }
         const mode = params.mode === "append" ? "append" : "overwrite";
         await writeNote(cfg, params.path, params.content, mode);
-        return {
-          content: [{ type: "text", text: `Wrote ${params.path} (${mode}).` }],
-          details: { ok: true, action, path: params.path, mode },
-        };
+        return textResult(`Wrote ${params.path} (${mode}).`, {
+          ok: true,
+          action,
+          path: params.path,
+          mode,
+        });
       }
 
       if (action === "upsert_section") {
@@ -445,10 +452,12 @@ export function createObsidianVaultTool(api: OpenClawPluginApi, cfg: ObsidianVau
           throw new Error("content is required");
         }
         await upsertSection(cfg, params.path, params.heading, params.content, params.level);
-        return {
-          content: [{ type: "text", text: `Upserted section "${params.heading}" in ${params.path}.` }],
-          details: { ok: true, action, path: params.path, heading: params.heading },
-        };
+        return textResult(`Upserted section "${params.heading}" in ${params.path}.`, {
+          ok: true,
+          action,
+          path: params.path,
+          heading: params.heading,
+        });
       }
 
       if (action === "search") {
@@ -464,13 +473,14 @@ export function createObsidianVaultTool(api: OpenClawPluginApi, cfg: ObsidianVau
         const body =
           results.length === 0
             ? "No matches."
-            : results
-                .map((m) => `${m.path}:${m.line} ${m.preview}`)
-                .join("\n");
-        return {
-          content: [{ type: "text", text: body }],
-          details: { ok: true, action, query: params.query, count: results.length, results },
-        };
+            : results.map((m) => `${m.path}:${m.line} ${m.preview}`).join("\n");
+        return textResult(body, {
+          ok: true,
+          action,
+          query: params.query,
+          count: results.length,
+          results,
+        });
       }
 
       api.logger.warn(`[obsidian-vault] unknown action: ${(params as any).action}`);
